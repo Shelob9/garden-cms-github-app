@@ -1,15 +1,22 @@
 import { Probot } from "probot";
 
-export = ({ app }: { app: Probot }) => {
+//@ts-ignore
+export = ({ app, getRouter }: { app: Probot }) => {
 	app.on("issues.opened", async (context) => {
 		const issueComment = context.issue({
 			body: "Hi Roy.",
 		});
 		await context.octokit.issues.createComment(issueComment);
 	});
-	// For more information on building apps:
-	// https://probot.github.io/docs/
+	// Get an express router to expose new HTTP endpoints
+	const router = getRouter("/api");
 
-	// To get your app running against GitHub, see:
-	// https://probot.github.io/docs/development/
+	// Use any middleware
+	router.use(require("express").static("public"));
+
+	// Add a new route
+	//@ts-ignore
+	router.get("/hi", (req, res) => {
+		res.send("Roy");
+	});
 };
