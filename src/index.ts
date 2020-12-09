@@ -1,7 +1,11 @@
 import { Probot } from "probot";
+const fs = require("fs");
+
 const clientId = process.env.GITHUB_ID;
 const clientSecret = process.env.GITHUB_SECRET;
-const privateKey = require("../private-key.pem");
+const privateKey = fs.readFileSync(
+	process.env.PRIVATE_KEY_PATH || "../private-key.pem"
+);
 
 import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "@octokit/rest";
