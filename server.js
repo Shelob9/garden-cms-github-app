@@ -4,7 +4,9 @@ const fs = require('fs');
 const clientId = process.env.GITHUB_ID;
 const clientSecret = process.env.GITHUB_SECRET;
 const privateKey = fs.readFileSync("./private-key.pem");
-const { createAppAuth } = require( "@octokit/auth-app");
+const { createAppAuth } = require("@octokit/auth-app");
+const { Octokit } = require('@octokit/rest');
+
 const auth = createAppAuth({
 	appId: 92086,
 	privateKey,
@@ -12,6 +14,15 @@ const auth = createAppAuth({
 	clientId,
 	clientSecret,
 });
+
+ function getOctokit(authToken) {
+	return new Octokit({
+		auth: authToken,
+	})
+}
+
+
+
 const app = express();
 app.use(express.json());
 app.get('/', async (req, res) => {
@@ -28,7 +39,9 @@ app.get('/login/after', async (req, res) => {
     try {
         const oauthAuthentication = await auth({ type: "oauth", code });
         const { token } = oauthAuthentication;
-        res.json({token});
+        let octokit = getOctokit(token);
+        let repos = await octokit.apps.listInstallationsForAuthenticatedUser();
+        res.json({token,repos});
     } catch (error) {
         res.status(400).json({error})
     }

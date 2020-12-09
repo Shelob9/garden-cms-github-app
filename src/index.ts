@@ -4,6 +4,7 @@ const clientSecret = process.env.GITHUB_SECRET;
 const privateKey = require("../private-key.pem");
 
 import { createAppAuth } from "@octokit/auth-app";
+import { Octokit } from "@octokit/rest";
 const auth = createAppAuth({
 	appId: 92086,
 	privateKey,
@@ -11,6 +12,12 @@ const auth = createAppAuth({
 	clientId,
 	clientSecret,
 });
+
+function getOctokit(authToken) {
+	return new Octokit({
+		auth: authToken,
+	});
+}
 //@ts-ignore
 export = ({ app, getRouter }: { app: Probot }) => {
 	app.on("issues.opened", async (context) => {
@@ -30,11 +37,28 @@ export = ({ app, getRouter }: { app: Probot }) => {
 	router.get("/hi", (req, res) => {
 		res.send("Roy");
 	});
-	//@ts-ignore
 
-	router.get("/login", async (req, res) => {
-		const oauthAuthentication = await auth({ type: "oauth", code: "123456" });
-		console.log(oauthAuthentication);
-		res.send("aa");
+	let redirect = "http://localhost:3000/login/after";
+	//@ts-ignore
+	router.get("/login/start", async (req, res) => {
+		res.redirect(
+			301,
+			`https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(
+				redirect
+			)}`
+		);
+	});
+	//@ts-ignore
+	router.get("/login/after", async (req, res) => {
+		const { code } = req.query;
+		try {
+			const oauthAuthentication = await auth({ type: "oauth", code });
+			const { token } = oauthAuthentication;
+			let octokit = getOctokit(token);
+			let repos = await octokit.apps.listInstallationsForAuthenticatedUser();
+			res.json({ token, repos });
+		} catch (error) {
+			res.status(400).json({ error });
+		}
 	});
 };
