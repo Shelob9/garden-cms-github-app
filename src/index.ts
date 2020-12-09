@@ -13,11 +13,12 @@ const auth = createAppAuth({
 	clientSecret,
 });
 
-function getOctokit(authToken) {
+function getOctokit(authToken: string) {
 	return new Octokit({
 		auth: authToken,
 	});
 }
+
 //@ts-ignore
 export = ({ app, getRouter }: { app: Probot }) => {
 	app.on("issues.opened", async (context) => {
