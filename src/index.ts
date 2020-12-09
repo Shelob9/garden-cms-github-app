@@ -43,7 +43,8 @@ export = ({ app, getRouter }: { app: Probot }) => {
 		res.send("Roy");
 	});
 
-	let redirect = "http://localhost:3000/login/after";
+	let redirect =
+		process.env.GITHUB_REDIRECT || `http://localhost:3000/login/after`;
 	//@ts-ignore
 	router.get("/login/start", async (req, res) => {
 		res.redirect(
